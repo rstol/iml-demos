@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Regularizer(object):
-    """docstring for Regularizer"""
+    """Basic Regularizer class."""
 
     def __init__(self, reg=0):
         super().__init__()
@@ -22,7 +22,10 @@ class Regularizer(object):
 
 
 class L2Regularizer(Regularizer):
-    """docstring for L2Regularizer"""
+    """L2Regularizer.
+
+    L2 regularization is given by lambda @ w @ w.
+    """
 
     def __init__(self, reg=0):
         super().__init__(reg)
@@ -37,7 +40,10 @@ class L2Regularizer(Regularizer):
 
 
 class L1Regularizer(Regularizer):
-    """docstring for L2Regularizer"""
+    """L1Regularizer.
+
+    L1 regularization is given by lambda @ |w|.
+    """
 
     def __init__(self, reg=0):
         super().__init__(reg)
