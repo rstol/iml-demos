@@ -67,7 +67,7 @@ def gradient_descent(w0, optimizer, regularizer=None, opts=dict()):
             wplus[-1] = np.abs(w[-1])
             w = np.sign(w) * wplus
         else:
-            w = w - eta * reg_gradient
+            w = w - eta * reg_gradient / batch_size
 
         # Compute new cost and save weights.  
         f_old = f_val
