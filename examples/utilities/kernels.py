@@ -13,14 +13,15 @@ class Kernel(object):
         self._Kpr = None
         self._prediction = prediction
 
+    @property
+    def number_samples(self):
+        return self._Ytr.size
+
     def set_regularization(self, reg):
         self._lambda = reg
 
     def set_weights(self, alpha):
         self._alpha = alpha
-
-    def get_number_samples(self):
-        return self._Ytr.size
 
     def load_data(self, Xtr, Ytr=None):
         self._Xtr = Xtr

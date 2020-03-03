@@ -1,5 +1,5 @@
 import numpy as np
-from examples.utilities.util import dist
+from .util import dist
 
 
 class Classifier(object):
@@ -14,6 +14,11 @@ class Classifier(object):
         self._w = None
         self._class_cost = np.array([1, 1])
 
+    @property
+    def number_samples(self) -> int:
+        """Return length of training set."""
+        return self._Xtr.shape[0]
+
     def load_data(self, X, Y):
         self._Xtr = X
         self._Ytr = Y
@@ -27,9 +32,6 @@ class Classifier(object):
 
     def set_class_cost(self, cost_array):
         self._class_cost = cost_array
-
-    def get_number_samples(self):
-        return self._Xtr.shape[0]
 
     def predict(self, X, w=None):
         pass
@@ -59,7 +61,7 @@ class Perceptron(Classifier):
 
     def loss(self, w, indexes=None):
         if indexes is None:
-            indexes = np.arange(0, self.get_number_samples(), 1)
+            indexes = np.arange(0, self.number_samples, 1)
         error = -np.dot(self._Xtr[indexes, :], w) * self._Ytr[indexes]
         error[error < 0] = 0.
 
@@ -71,7 +73,7 @@ class Perceptron(Classifier):
 
     def gradient(self, w, indexes=None):
         if indexes is None:
-            indexes = np.arange(0, self.get_number_samples(), 1)
+            indexes = np.arange(0, self.number_samples, 1)
         error = -np.dot(self._Xtr[indexes, :], w) * self._Ytr[indexes]
         gradient = -self._Xtr[indexes, :] * self._Ytr[indexes, np.newaxis]
         gradient[error < 0] = 0
@@ -107,7 +109,7 @@ class SVM(Classifier):
 
     def loss(self, w, indexes=None):
         if indexes is None:
-            indexes = np.arange(0, self.get_number_samples(), 1)
+            indexes = np.arange(0, self.number_samples, 1)
         error = 1 - np.dot(self._Xtr[indexes, :], w) * self._Ytr[indexes]
         error[error < 0] = 0
 
@@ -119,7 +121,7 @@ class SVM(Classifier):
 
     def gradient(self, w, indexes=None):
         if indexes is None:
-            indexes = np.arange(0, self.get_number_samples(), 1)
+            indexes = np.arange(0, self.number_samples, 1)
         error = 1 - np.dot(self._Xtr[indexes, :], w) * self._Ytr[indexes]
         gradient = -self._Xtr[indexes, :] * self._Ytr[indexes, np.newaxis]
         gradient[error < 0] = 0
@@ -156,14 +158,14 @@ class Logistic(Classifier):
 
     def loss(self, w, indexes=None):
         if indexes is None:
-            indexes = np.arange(0, self.get_number_samples(), 1)
+            indexes = np.arange(0, self.number_samples, 1)
         z = np.dot(self._Xtr[indexes, :], w) * self._Ytr[indexes]
         error = np.log(1 + np.exp(-z))
         return np.sum(error) / indexes.size
 
     def gradient(self, w, indexes=None):
         if indexes is None:
-            indexes = np.arange(0, self.get_number_samples(), 1)
+            indexes = np.arange(0, self.number_samples, 1)
         z = np.dot(self._Xtr[indexes, :], w) * self._Ytr[indexes]
         alpha = (np.exp(-z) / (1 + np.exp(-z)) * self._Ytr[indexes])
         gradient = -(alpha[:, np.newaxis] * self._Xtr[indexes, :])
@@ -180,18 +182,27 @@ class kNN(Classifier):
         super().__init__(X, Y)
         self._w = k
 
-    def set_k(self, k):
+    @property
+    def k(self):
+        return self._w
+
+    @k.setter
+    def k(self, k):
         self._w = k
 
-    def get_k(self):
-        return k
+    def predict(self, X, w=None):
+        if w is None:
+            k = self.k
+        else:
+            k = w
+            if type(w) is not int:
+                raise TypeError("w must be an integer.")
 
-    def predict(self, X):
         Y = np.zeros((X.shape[0]))
         i = 0
         for x in X:
             D = dist(self._Xtr, x)
-            indexes = np.argsort(D, axis=0)[0:self._w]
+            indexes = np.argsort(D, axis=0)[0:k]
 
             Y[i] = np.sum(self._Ytr[indexes])
             i += 1
