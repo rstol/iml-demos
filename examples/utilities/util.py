@@ -51,10 +51,10 @@ def gradient_descent(w0, optimizer, regularizer=None, opts=dict()):
         # Update learning rate.
         learning_rate_opts = {'learning_rate_scheduling': opts.get(
             'learning_rate_scheduling', None),
-                              'eta0': opts.get('eta0', 0.01),
-                              'it': it,
-                              'f_increased': (f_val > f_old),
-                              'grad_sum': grad_sum}
+            'eta0': opts.get('eta0', 0.01),
+            'it': it,
+            'f_increased': (f_val > f_old),
+            'grad_sum': grad_sum}
         eta = compute_learning_rate(eta, learning_rate_opts)
 
         # Perform gradient step.
@@ -63,7 +63,7 @@ def gradient_descent(w0, optimizer, regularizer=None, opts=dict()):
         # Regularization
         if opts.get('shrinkage', False):
             wplus = np.abs(w) - eta * regularizer.get_lambda()
-            wplus[wplus<0] = 0
+            wplus[wplus < 0] = 0
             wplus[-1] = np.abs(w[-1])
             w = np.sign(w) * wplus
         else:
@@ -83,6 +83,7 @@ def compute_learning_rate(eta, opts=dict()):
     eta0 = opts.get('eta0', eta)
     f_increased = opts.get('f_increased', False)
     grad_sum = opts.get('grad_sum', 0)
+    reg = opts.get('reg', 1/100.)
     it = opts.get('it', 0)
     if learning_rate_scheduling is None:
         eta = eta0  # keep it constant. 
@@ -92,8 +93,8 @@ def compute_learning_rate(eta, opts=dict()):
         eta = (eta / 5) if f_increased else (eta * 1.1)
     elif learning_rate_scheduling == 'AdaGrad':
         eta = eta0 / np.sqrt(grad_sum)
-    elif learning_rate_scheduling == 'Annealing2':
-        eta = min([eta0, 100. / (it + 1.)])
+    elif learning_rate_scheduling == 'AnnealingSVM':
+        eta = min([eta0, 1 / reg * (it + 1.)])
     else:
         raise ValueError('Learning rate scheduling {} not understood'.format(
             learning_rate_scheduling))
@@ -131,4 +132,3 @@ def dist(X1, X2=None):
 
             D[row, col] = np.linalg.norm(x1 - x2)
     return D
-
