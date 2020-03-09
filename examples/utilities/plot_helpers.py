@@ -66,6 +66,7 @@ def plot_data(X, Y, fig=None, options=dict()):
         fig = plt.subplot(111)
     fig.plot(X, Y, options.get('marker', 'b*'), 
         label=options.get('label', 'Raw data'),
+        linewidth=options.get('linewidth', 2),
         fillstyle=options.get('fillstyle', 'full'),
         ms=options.get('size', 8))
     process_plot(fig, options)

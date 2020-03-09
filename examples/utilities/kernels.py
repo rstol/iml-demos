@@ -1,12 +1,13 @@
 import numpy as np
 
 class Kernel(object):
-    def __init__(self, Xtr, Ytr, reg=0.0, deg=0, bw=None, prediction=True):
+    def __init__(self, Xtr, Ytr, reg=0.0, deg=0, bw=None, freq=None, prediction=True):
         self._Xtr = Xtr
         self._Ytr = Ytr
         self._lambda = reg
         self._deg = deg
         self._bw = bw
+        self._freq = freq
         self._Ktr = self._lambda * np.eye(self._Xtr.shape[0])
 
         self._alpha = None
@@ -91,8 +92,8 @@ class Kernel(object):
 
 
 class SumKernel(Kernel):
-    def __init__(self, kernel_list, Xtr, Ytr, reg=0.0, deg=0, bw=None, prediction=True):
-        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=0, bw=0, prediction=prediction)
+    def __init__(self, kernel_list, Xtr, Ytr, reg=0.0, deg=0, bw=None, freq=None, prediction=True):
+        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=0, bw=0, freq=0, prediction=prediction)
         self._kernel_list = []
         for idx, kernel_name in enumerate(kernel_list):
             try:
@@ -103,8 +104,14 @@ class SumKernel(Kernel):
                 local_bw = bw[idx]
             except TypeError:
                 local_bw = bw
+
+            try:
+                local_freq = freq[idx]
+            except TypeError:
+                local_freq = freq
             
-            kernel = kernel_name(Xtr=Xtr, Ytr=Ytr, reg=0, deg=local_deg, bw=local_bw, prediction=prediction)
+            kernel = kernel_name(Xtr=Xtr, Ytr=Ytr, reg=0, deg=local_deg, bw=local_bw, freq=local_freq, 
+                prediction=prediction)
 
             self._kernel_list.append(kernel)
             self._Ktr += kernel.build_kernel(self._Xtr)
@@ -117,8 +124,8 @@ class SumKernel(Kernel):
 
 
 class LinearKernel(Kernel):
-    def __init__(self, Xtr, Ytr=None, reg=0.0, deg=1, bw=None, prediction=True):
-        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=deg, bw=bw, prediction=prediction)
+    def __init__(self, Xtr, Ytr=None, reg=0.0, deg=1, bw=None, freq=None, prediction=True):
+        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=deg, bw=bw, freq=freq, prediction=prediction)
         self._Ktr += self.build_kernel(self._Xtr)
 
     def load_data(self, Xtr, Ytr=None):
@@ -140,8 +147,8 @@ class LinearKernel(Kernel):
 
 
 class PolynomialKernel(Kernel):
-    def __init__(self, Xtr, Ytr=None, reg=0.0, deg=1, bw=None, prediction=True):
-        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=deg, bw=bw, prediction=prediction)
+    def __init__(self, Xtr, Ytr=None, reg=0.0, deg=1, bw=None, freq=None, prediction=True):
+        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=deg, bw=bw, freq=freq, prediction=prediction)
         self._Ktr += self.build_kernel(self._Xtr)
 
     def load_data(self, Xtr, Ytr=None):
@@ -163,8 +170,8 @@ class PolynomialKernel(Kernel):
 
 
 class LaplacianKernel(Kernel):
-    def __init__(self, Xtr, Ytr=None, reg=0.0, deg=0, bw=0.2, prediction=True):
-        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=deg, bw=bw, prediction=prediction)
+    def __init__(self, Xtr, Ytr=None, reg=0.0, deg=0, bw=0.2, freq=None, prediction=True):
+        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=deg, bw=bw, freq=freq, prediction=prediction)
         self._Ktr += self.build_kernel(self._Xtr)
 
     def load_data(self, Xtr, Ytr=None):
@@ -187,8 +194,8 @@ class LaplacianKernel(Kernel):
 
 
 class GaussianKernel(Kernel):
-    def __init__(self, Xtr, Ytr=None, reg=0.0, deg=0, bw=0.2, prediction=True):
-        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=deg, bw=bw, prediction=prediction)
+    def __init__(self, Xtr, Ytr=None, reg=0.0, deg=0, bw=0.2, freq=None, prediction=True):
+        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=deg, bw=bw, freq=freq, prediction=prediction)
         self._Ktr += self.build_kernel(self._Xtr)
 
     def load_data(self, Xtr, Ytr=None):
@@ -211,8 +218,8 @@ class GaussianKernel(Kernel):
 
 
 class PeriodicKernel(Kernel):
-    def __init__(self, Xtr, Ytr=None, reg=0.0, deg=0, bw=2.5, prediction=True):
-        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=deg, bw=bw, prediction=prediction)
+    def __init__(self, Xtr, Ytr=None, reg=0.0, deg=0, bw=0.2, freq=1, prediction=True):
+        super().__init__(Xtr=Xtr, Ytr=Ytr, reg=reg, deg=deg, bw=bw, freq=freq, prediction=prediction)
         self._Ktr += self.build_kernel(self._Xtr)
 
     def load_data(self, Xtr, Ytr=None):
@@ -229,7 +236,7 @@ class PeriodicKernel(Kernel):
         cols = Y.shape[0]
         K = np.zeros((rows, cols))
         for col in range(cols):
-            dist = (np.linalg.norm(self._Xtr - Y[col, :], ord=2, axis=1)) * self._bw
-            K[:, col] = np.exp(-np.square(np.sin(dist)))
+            dist = np.linalg.norm(self._Xtr - Y[col, :], ord=1, axis=1)
+            K[:, col] = np.exp(-2 * np.square(np.sin(dist * self._freq)) / self._bw)
         return K
 
