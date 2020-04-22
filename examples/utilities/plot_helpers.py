@@ -260,11 +260,16 @@ def classification_progression(X, Y, w_trajectory, index_trajectory, classifier,
             w = w_trajectory[it, :]
             classifier.set_weights(w)
             zg = classifier.predict(x1g)  # Replace this by func call
-
             contour = contour_plot.contourf(xg, yg, np.reshape(zg, newshape=xg.shape), alpha=0.3,
-                                   cmap=matplotlib.cm.jet)  # colors=('blue', 'red'))
-            # if 'cb' not in locals():
-            #     cb = contour_plot.colorbar(contour)
+                                       cmap=matplotlib.cm.jet, vmin=0, vmax=1)  # colors=('blue', 'red'))
+            contour_plot.set_yticklabels([])
+            if it == 0:                
+                m = plt.cm.ScalarMappable(cmap=matplotlib.cm.jet)
+                m.set_array(zg)
+#                 m.set_alpha(0.3)
+                m.set_clim(0., 1.)
+                cbar = plt.colorbar(m, ax=contour_plot, boundaries=np.linspace(0, 1, 6), alpha=0.3)
+                cbar.set_label('P(y=1)', rotation=270, labelpad=20)
 
         if error_plot is not None:
             w = w_trajectory[it, :] 
@@ -283,6 +288,8 @@ def classification_progression(X, Y, w_trajectory, index_trajectory, classifier,
             error_plot.relim()
             error_plot.autoscale()
             error_plot.legend(loc='upper right')
+            error_plot.set_ylabel('Loss')
+            error_plot.set_xlabel('Num Iter')
 
         plt.draw()
 
