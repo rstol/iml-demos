@@ -4,7 +4,7 @@ from .util import dist
 
 class Classifier(object):
     """docstring for Classifier"""
-    probabilistic = False
+    structured = True
         
     def __init__(self, X, Y):
         super().__init__()
@@ -146,7 +146,7 @@ class SVM(Classifier):
 
 class Logistic(Classifier):
     """docstring for Logistic"""
-    probabilistic = True
+    structured = False
         
     def __init__(self, X, Y):
         super().__init__(X, Y)

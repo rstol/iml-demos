@@ -1,6 +1,7 @@
 import numpy as np
 
 class Kernel(object):
+    structured = True
     def __init__(self, Xtr, Ytr, reg=0.0, deg=0, bw=None, freq=None, prediction=True):
         self._Xtr = Xtr
         self._Ytr = Ytr

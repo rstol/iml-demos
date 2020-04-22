@@ -15,7 +15,7 @@ class LinearRegressor(object):
         Vector of responses.
     """
     _eps: float = 1e-12  # numerical precision
-
+    structured = False
     def __init__(self, x: np.ndarray, y: np.ndarray) -> None:
         self._Xtr = x
         self._Ytr = y

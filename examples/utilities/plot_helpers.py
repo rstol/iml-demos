@@ -263,7 +263,7 @@ def classification_progression(X, Y, w_trajectory, index_trajectory, classifier,
             contour = contour_plot.contourf(xg, yg, np.reshape(zg, newshape=xg.shape), alpha=0.3,
                                        cmap=matplotlib.cm.jet, vmin=0, vmax=1)  # colors=('blue', 'red'))
             contour_plot.set_yticklabels([])
-            if it == 0 and classifier.probabilistic:               
+            if it == 0 and not classifier.structured:               
                 m = plt.cm.ScalarMappable(cmap=matplotlib.cm.jet)
                 m.set_array(zg)
 #                 m.set_alpha(0.3)
