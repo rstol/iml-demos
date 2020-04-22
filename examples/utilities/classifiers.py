@@ -4,7 +4,8 @@ from .util import dist
 
 class Classifier(object):
     """docstring for Classifier"""
-
+    probabilistic = False
+        
     def __init__(self, X, Y):
         super().__init__()
         self._Xtr = X
@@ -145,7 +146,8 @@ class SVM(Classifier):
 
 class Logistic(Classifier):
     """docstring for Logistic"""
-
+    probabilistic = True
+        
     def __init__(self, X, Y):
         super().__init__(X, Y)
         self._w = np.random.randn(X.shape[1])
