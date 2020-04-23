@@ -16,6 +16,7 @@ class LinearRegressor(object):
     """
     _eps: float = 1e-12  # numerical precision
     structured = False
+
     def __init__(self, x: np.ndarray, y: np.ndarray) -> None:
         self._Xtr = x
         self._Ytr = y
@@ -68,3 +69,55 @@ class LinearRegressor(object):
 
         self.weights = w_old
         return np.dot(error.T, error)
+
+
+class TStudent(LinearRegressor):
+    """Linear Regressor object.
+
+    A linear regressor object has a training set given by X, y and a vector w.
+    It computes the response as y_hat = w @ x
+
+    The loss is given by
+    log(1 + (y - w @ x)^2 / (nu * sigma^2))
+
+    Parameters
+    ----------
+    nu: int
+        degrees of freedom of student-t distribution.
+    sigma: float
+        noise of model.
+    x: np.ndarray.
+        Co-variates vector.
+    y: np.ndarray.
+        Vector of responses.
+    """
+
+    def __init__(self, x: np.ndarray, y: np.ndarray, nu: int, sigma: float = 1) -> None:
+        super().__init__(x, y)
+        self.nu = nu
+        self.var = sigma #** 2
+
+    def loss(self, w: np.ndarray, indexes: np.ndarray = None) -> np.ndarray:
+        """Get loss of w and the current index."""
+        if indexes is None:
+            indexes = np.arange(self.number_samples)
+
+        self.weights = w
+        delta = self.predict(self._Xtr[indexes, :]) - self._Ytr[indexes]
+
+        loss = np.log(1 + delta ** 2 / (self.nu * self.var ** 2)).mean()
+        return -loss
+
+    def gradient(self, w: np.ndarray, indexes: np.ndarray = None) -> np.ndarray:
+        """Get gradient of w and the current index."""
+        if indexes is None:
+            indexes = np.arange(self.number_samples)
+
+        self.weights = w
+        delta = self.predict(self._Xtr[indexes, :]) - self._Ytr[indexes]
+
+        den = (self.nu * self.var ** 2 + delta ** 2)
+        num = 2 * delta
+        grad = (num / den) @ self._Xtr[indexes, :]
+
+        return grad / len(indexes)
