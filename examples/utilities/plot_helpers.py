@@ -1,12 +1,16 @@
 import numpy as np
-import matplotlib
+from scipy import linalg
+
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+# from plt import cm
 from matplotlib import rc
 import time
 import IPython
 
 # rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
 # rc('text', usetex=True)
+
 
 def make_meshgrid(x, y, h=.02):
     """Create a mesh of points to plot in
@@ -27,21 +31,23 @@ def make_meshgrid(x, y, h=.02):
                          np.arange(y_min, y_max, h))
     return xx, yy
 
-def plot_contours(ax, clf, xx, yy, **params):
-    """Plot the decision boundaries for a classifier.
 
-    Parameters
-    ----------
-    ax: matplotlib axes object
-    clf: a classifier
-    xx: meshgrid ndarray
-    yy: meshgrid ndarray
-    params: dictionary of params to pass to contourf, optional
-    """
-    Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
-    Z = Z.reshape(xx.shape)
-    out = ax.contourf(xx, yy, Z, **params)
-    return out
+def plot_ellipse(mean, covar, color='red', ax=None):
+    if ax is None:
+        fig, ax = plt.subplots(1, 1)
+
+    v, w = linalg.eigh(covar)
+    v = 2. * np.sqrt(2.) * np.sqrt(v)
+    u = w[0] / linalg.norm(w[0])
+
+    # Plot an ellipse to show the Gaussian component
+    angle = np.arctan(u[1] / u[0])
+    angle = 180. * angle / np.pi  # convert to degrees
+
+    ell = mpl.patches.Ellipse(mean, v[0], v[1], 180. + angle, color=color)
+    ell.set_clip_box(ax.bbox)
+    ell.set_alpha(0.5)
+    ax.add_artist(ell)
 
 
 def process_plot(fig, options=dict()):
@@ -219,10 +225,10 @@ def classification_progression(X, Y, w_trajectory, index_trajectory, classifier,
 
     process_plot(contour_plot, contour_opts)
 
-    min_x = np.min(X[:, 0]);
-    max_x = np.max(X[:, 0]);
-    min_y = np.min(X[:, 1]);
-    max_y = np.max(X[:, 1]);
+    min_x = np.min(X[:, 0])
+    max_x = np.max(X[:, 0])
+    min_y = np.min(X[:, 1])
+    max_y = np.max(X[:, 1])
     n_points = options.get('n_points', 20)
     [xg, yg] = np.meshgrid(np.linspace(min_x, max_x, n_points),
                            np.linspace(min_y, max_y, n_points))
@@ -261,10 +267,10 @@ def classification_progression(X, Y, w_trajectory, index_trajectory, classifier,
             classifier.set_weights(w)
             zg = classifier.predict(x1g)  # Replace this by func call
             contour = contour_plot.contourf(xg, yg, np.reshape(zg, newshape=xg.shape), alpha=0.3,
-                                       cmap=matplotlib.cm.jet, vmin=0, vmax=1)  # colors=('blue', 'red'))
+                                       cmap=mpl.cm.jet, vmin=0, vmax=1)  # colors=('blue', 'red'))
             contour_plot.set_yticklabels([])
             if it == 0 and not classifier.structured:               
-                m = plt.cm.ScalarMappable(cmap=matplotlib.cm.jet)
+                m = plt.cm.ScalarMappable(cmap=mpl.cm.jet)
                 m.set_array(zg)
 #                 m.set_alpha(0.3)
                 m.set_clim(0., 1.)
@@ -304,10 +310,10 @@ def classification_progression(X, Y, w_trajectory, index_trajectory, classifier,
 def plot_classification_boundaries(X, classifier, fig=None, options=dict()):
     if fig is None:
         fig = plt.subplot(111)
-    min_x = np.min(X[:, 0]);
-    max_x = np.max(X[:, 0]);
-    min_y = np.min(X[:, 1]);
-    max_y = np.max(X[:, 1]);
+    min_x = np.min(X[:, 0])
+    max_x = np.max(X[:, 0])
+    min_y = np.min(X[:, 1])
+    max_y = np.max(X[:, 1])
     n_points = options.get('n_points', 20)
     [xg, yg] = np.meshgrid(np.linspace(min_x, max_x, n_points),
                            np.linspace(min_y, max_y, n_points))
@@ -319,5 +325,5 @@ def plot_classification_boundaries(X, classifier, fig=None, options=dict()):
 
     Zg = classifier.predict(x1g)
     contour = fig.contourf(xg, yg, np.reshape(Zg, newshape=xg.shape), alpha=0.3,
-                           cmap=matplotlib.cm.jet)  # colors=('blue', 'red'))
+                           cmap=mpl.cm.jet)  # colors=('blue', 'red'))
     cb = plt.colorbar(contour)
