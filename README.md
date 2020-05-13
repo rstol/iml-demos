@@ -33,7 +33,7 @@ $ jupyter notebook --no-browser --port=7800
 
 On your local terminal run [explained](https://explainshell.com/explain?cmd=ssh+-N+-f+-L+localhost%3A8001%3Alocalhost%3A7800+username%40ip_address):
 ```bash
-$ run ssh -N -f -L localhost:8001:localhost:7800 username@ip_address 
+$ ssh -N -f -L localhost:8001:localhost:7800 username@ip_address 
 ```
 
 Open web browser on local machine and go to http://localhost:8001/
