@@ -95,6 +95,23 @@ def plot_fit(X, w, fig=None, options=dict()):
     process_plot(fig, options)
 
 
+def plot_contours(ax, clf, xx, yy, **params):
+    """Plot the decision boundaries for a classifier.
+
+    Parameters
+    ----------
+    ax: matplotlib axes object
+    clf: a classifier
+    xx: meshgrid ndarray
+    yy: meshgrid ndarray
+    params: dictionary of params to pass to contourf, optional
+    """
+    Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+    out = ax.contourf(xx, yy, Z, **params)
+    return out
+
+    
 def plot_contour(X, Y, w_trajectory, func, fig=None, options=dict()):
     if fig is None:
         fig = plt.subplot(111)
