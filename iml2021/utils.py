@@ -3,7 +3,7 @@ import numpy as np
 import time
 
 import sklearn
-from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
 
 """
 Generates the data by sampling it from a centered Gaussian distribution with a
@@ -103,3 +103,40 @@ def generate_additional_data(num_samples, d, Sigma, beta_star, noise_sigma):
   noise = np.random.normal(scale=noise_sigma, size=(num_samples, 1))
   y = X @ beta_star + noise
   return X, y
+
+"""
+Computes the population risk of the empirical minimizer for different degrees of
+overparameterization.
+
+The amount of overparameterization is controled through
+the ratio gamma = d / n. In order to vary gamma, one can either fix the data
+dimension and vary the number of samples, or the other way round.
+If use_ridge is set, then for each level of overparameterization, it determines
+the best ridge coefficient using cross-validation and returns the population
+risk of the estimator learned with that coefficient.
+"""
+def get_risk_vs_overparametrization(all_gammas, all_snr, fix_n_vary_d=False,
+        n=200, d=1000, cov_type="isotropic", use_ridge=False):
+  risks = {}
+
+  noise_sigma = 1
+  n, d = int(n), int(d)
+  if not fix_n_vary_d:
+    max_n = int(d / np.min(all_gammas)) + 1
+
+  for snr in all_snr:
+    risks[snr] = []
+    if not fix_n_vary_d:
+      X, y, beta_star, Sigma = generate_data(n=max_n, d=d, snr=snr, noise_sigma=noise_sigma, cov=cov_type)
+    for gamma in all_gammas:
+      if fix_n_vary_d:
+        d = int(n * gamma)
+        X, y, beta_star, Sigma = generate_data(n=n, d=d, snr=snr, noise_sigma=noise_sigma, cov=cov_type)
+      else:
+        n = int(d / gamma)
+      if use_ridge:
+        estimator = RidgeCV(alphas=[0.1, 1, 10], fit_intercept=False, cv=5).fit(X[:n], y[:n])
+      else:
+        estimator = LinearRegression(fit_intercept=False).fit(X[:n], y[:n])
+      risks[snr].append(compute_population_risk(beta_star, estimator.coef_, noise_sigma, Sigma))
+  return risks
