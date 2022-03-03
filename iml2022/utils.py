@@ -44,23 +44,25 @@ def generate_data(n, d, snr, noise_sigma, cov="isotropic", seed=None):
   return X, y, beta_star, Sigma
 
 """
-Computes the population risk of a linear predictor beta_hat, when the data is
-sampled from a Gaussian distribution with 0 mean and covariance matrix Sigma.
-The predictor variable y is a linear combination of the covariates (through
-the ground truth beta_star) plus additive noise sampled from N(0, noise_sigma).
-The closed form for the population risk in this setting is taken from
-https://arxiv.org/pdf/1903.08560.pdf, Section 2.1.
+Computes the estimation error ||beta_star - beta_hat||^2 for a linear predictor
+beta_hat, when the data is sampled from a Gaussian distribution with 0 mean and
+covariance matrix Sigma. The predictor variable y is a linear combination of
+the covariates (through the ground truth beta_star) plus additive noise sampled
+from N(0, noise_sigma). The closed form of the error in this setting is taken
+from https://arxiv.org/pdf/1903.08560.pdf, Section 2.1.
 """
-def compute_population_risk(beta_star, beta_hat, noise_sigma, Sigma):
+
+def compute_estimation_error(beta_star, beta_hat, noise_sigma, Sigma):
   beta_star = beta_star.reshape(-1, 1)
   beta_hat = beta_hat.reshape(-1, 1)
   diff = beta_star - beta_hat
-  return (diff.T @ Sigma @ diff)[0][0] + noise_sigma**2
+  return (diff.T @ Sigma @ diff)[0][0]
 
 """
-Computes the empirical risk of a linear predictor beta_hat using a finite sample.
+Computes the empirical test error of a linear predictor beta_hat using a finite
+sample test set.
 """
-def compute_empirical_risk(beta_hat, X, y):
+def compute_test_error(beta_hat, X, y):
   pred = X @ np.array(beta_hat).reshape(-1, 1)
   return np.linalg.norm(y - pred)**2 / X.shape[0]
 
@@ -105,27 +107,26 @@ def generate_additional_data(num_samples, d, Sigma, beta_star, noise_sigma):
   return X, y
 
 """
-Computes the population risk of the empirical minimizer for different degrees of
-overparameterization.
+Computes the error ||beta_star - beta_hat||^2 of the empirical minimizer for
+different degrees of overparameterization.
 
 The amount of overparameterization is controled through
 the ratio gamma = d / n. In order to vary gamma, one can either fix the data
 dimension and vary the number of samples, or the other way round.
 If use_ridge is set, then for each level of overparameterization, it determines
-the best ridge coefficient using cross-validation and returns the population
-risk of the estimator learned with that coefficient.
+the best ridge coefficient using cross-validation and returns the error of the
+estimator learned with that coefficient.
 """
-def get_risk_vs_overparametrization(all_gammas, all_snr, fix_n_vary_d=False,
-        n=200, d=1000, cov_type="isotropic", use_ridge=False):
-  risks = {}
+def get_error_vs_overparametrization(all_gammas, all_snr, fix_n_vary_d=False,
+        n=200, d=1000, cov_type="isotropic", use_ridge=False, noise_sigma=1):
+  errors = {}
 
-  noise_sigma = 1
   n, d = int(n), int(d)
   if not fix_n_vary_d:
     max_n = int(d / np.min(all_gammas)) + 1
 
   for snr in all_snr:
-    risks[snr] = []
+    errors[snr] = []
     if not fix_n_vary_d:
       X, y, beta_star, Sigma = generate_data(n=max_n, d=d, snr=snr, noise_sigma=noise_sigma, cov=cov_type)
     for gamma in all_gammas:
@@ -138,5 +139,5 @@ def get_risk_vs_overparametrization(all_gammas, all_snr, fix_n_vary_d=False,
         estimator = RidgeCV(alphas=[0.1, 1, 10], fit_intercept=False, cv=5).fit(X[:n], y[:n])
       else:
         estimator = LinearRegression(fit_intercept=False).fit(X[:n], y[:n])
-      risks[snr].append(compute_population_risk(beta_star, estimator.coef_, noise_sigma, Sigma))
-  return risks
+      errors[snr].append(compute_estimation_error(beta_star, estimator.coef_, noise_sigma, Sigma))
+  return errors
