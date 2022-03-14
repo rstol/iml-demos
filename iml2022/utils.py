@@ -58,6 +58,9 @@ def compute_estimation_error(beta_star, beta_hat, noise_sigma, Sigma):
   diff = beta_star - beta_hat
   return (diff.T @ Sigma @ diff)[0][0]
 
+def compute_population_risk(beta_star, beta_hat, noise_sigma, Sigma):
+  return compute_estimation_error(beta_star, beta_hat, noise_sigma, Sigma) + noise_sigma**2
+
 """
 Computes the empirical test error of a linear predictor beta_hat using a finite
 sample test set.
